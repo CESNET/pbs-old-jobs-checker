@@ -4,6 +4,7 @@ from datetime import datetime, date
 import time
 import sys
 import getopt
+from configparser import ConfigParser
 
 f = int(time.time()) - 13132800  # 5 months
 t = int(time.time())
@@ -14,12 +15,30 @@ OPTIONS = {FROM:{str(f)}, TO: {str(t)}}
 try:
     import pbs_ifl
 except:
-    sys.path.insert(1, "/opt/pbs/lib/python3-pbs_ifl")
+    sys.path.insert(1, "/opt/pbs/lib/pbs-old-jobs-checker-pbs_ifl")
     import pbs_ifl
 
-c = pbs_ifl.pbs_connect("localhost")
+def config(filename="/opt/pbs/etc/pbs-old-jobs-checker.conf",
+           section=""):
 
-#print(pbs_ifl.pbs_statjob(c, None, None, None))
+    parser = ConfigParser()
+    parser.read(filename)
+
+    c = {}
+    if parser.has_section(section):
+        params = parser.items(section)
+        for param in params:
+            c[param[0]] = param[1]
+    else:
+        raise Exception("Section {0} not found in the {1} file"
+                        .format(section, filename))
+
+    return c
+    
+try:
+    hostname = config(section="general")["pbs_server"]
+except:
+    hostname = "localhost"
 
 """ OPTIONS
     -r --remove => withouth argument -> for removing everything
@@ -111,17 +130,15 @@ def delete():
 def send_mail():
     pass
 
-
-pbs = pbs_ifl.pbs_statjob(c, None, None, None) # list of dictionaryies
-#one = out[0]
-#print(one["ctime"])
-#print(datetime.fromtimestamp(int(one["ctime"])))
-
 options = {}
 get_options(sys.argv[1:]) # get options
 
 # searching old jobs
 filtered = []  # List of Tuples (UTC, job owner, job id)
+
+c = pbs_ifl.pbs_connect(hostname)
+
+pbs = pbs_ifl.pbs_statjob(c, None, None, None) # list of dictionaryies
 
 for job in pbs:
     get_suitable_job(job, filtered)
@@ -132,7 +149,5 @@ for job in pbs:
     old.append((job["id"], job["Job_Owner"]))"""
 filtered.sort()
 print(filtered)
-print(len(filtered))
-print(len(pbs))
 
 pbs_ifl.pbs_disconnect(c)

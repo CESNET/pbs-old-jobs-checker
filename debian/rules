@@ -1,0 +1,23 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	mkdir -p $(CURDIR)/debian/pbs-old-jobs-checker/opt/pbs/etc
+	mkdir -p $(CURDIR)/debian/pbs-old-jobs-checker/opt/pbs/bin
+	mkdir -p $(CURDIR)/debian/pbs-old-jobs-checker/opt/pbs/lib/pbs-old-jobs-checker-pbs_ifl
+
+	cp $(CURDIR)/pbs-old-jobs-checker.conf $(CURDIR)/debian/pbs-old-jobs-checker/opt/pbs/etc/
+	cp $(CURDIR)/pbs-old-jobs-checker.py $(CURDIR)/debian/pbs-old-jobs-checker/opt/pbs/bin/
+	cp $(CURDIR)/pbs_ifl.py $(CURDIR)/debian/pbs-old-jobs-checker/opt/pbs/lib/pbs-old-jobs-checker-pbs_ifl/
+	cp $(CURDIR)/_pbs_ifl.so $(CURDIR)/debian/pbs-old-jobs-checker/opt/pbs/lib/pbs-old-jobs-checker-pbs_ifl/
+	dh_auto_install
+
+override_dh_installdeb:
+	dh_installdeb
+
+clean:
+	dh_testdir
+	dh_testroot
+	dh_clean
